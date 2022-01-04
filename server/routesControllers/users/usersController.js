@@ -33,9 +33,9 @@ exports.login = async (req, res) => {
     });
 
     if (!user)
-      return res
-        .status(404)
-        .send("User is not found. Please check your username or email.");
+      return res.status(404).json({
+        message: "User is not found. Please check username or email.",
+      });
 
     const checkedPassword = await bcrypt.compare(password, user.hash);
 
@@ -81,5 +81,57 @@ exports.profile = async (req, res) => {
     return res.status(200).json(user);
   } catch (err) {
     return res.status(400).send(err.message);
+  }
+};
+
+//!update Profile Username--------------
+exports.updateUsername = async (req, res) => {
+  try {
+    const { username, newUsername } = req.body;
+
+    const changeContent = {
+      username: newUsername,
+    };
+
+    const userProfile = await UsersModel.findOneAndUpdate(
+      { username },
+      changeContent,
+      { new: true }
+    );
+
+    if (!userProfile) {
+      return res.status(404).send("User is not found.");
+    }
+    userProfile.username = newUsername;
+
+    return res.status(200).send("Username is updated.");
+  } catch (err) {
+    return res.status(404).send(err.message);
+  }
+};
+
+//!update Profile Email--------------
+exports.updateEmail = async (req, res) => {
+  try {
+    const { email, newEmail } = req.body;
+
+    const changeContent = {
+      email: newEmail,
+    };
+
+    const userProfile = await UsersModel.findOneAndUpdate(
+      { email },
+      changeContent,
+      { new: true }
+    );
+
+    if (!userProfile) {
+      return res.status(404).send("User is not found.");
+    }
+    userProfile.email = newEmail;
+
+    return res.status(200).send("Email is updated.");
+  } catch (err) {
+    return res.status(404).send(err.message);
   }
 };

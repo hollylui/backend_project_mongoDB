@@ -18,4 +18,8 @@ router.use(passport.authenticate("jwt", { session: false }));
 //Profile
 router.get("/profile", controller.profile);
 
+//update username profile
+router.patch("/profile/username", controller.updateUsername);
+router.patch("/profile/email", controller.updateEmail);
+
 module.exports = router;
