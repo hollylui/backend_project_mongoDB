@@ -8,7 +8,7 @@ const userSchema = new Schema({
   sex: {
     type: String,
     enum: ["male", "female", "diverse"],
-    default: "diverse",
+    required: true,
   },
   account: {
     type: String,

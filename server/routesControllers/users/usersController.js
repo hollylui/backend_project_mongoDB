@@ -2,6 +2,10 @@ const bcrypt = require("bcrypt");
 const UsersModel = require("../../models/users/UsersModel");
 const authHelper = require("../../helpers/users/authHelper");
 
+const newTrue = {
+  new: true,
+};
+
 //! User register --------------------------------
 exports.register = async (req, res) => {
   const { name, username, email, sex, password } = req.body;
@@ -16,10 +20,10 @@ exports.register = async (req, res) => {
       hash: hashedPassword,
     };
 
-    const user = await UsersModel.create(userContent);
+    await UsersModel.create(userContent);
     return res.status(200).json({ message: "You are registed." });
   } catch (err) {
-    return res.status(404).send(err.message);
+    return res.status(400).send(err.message);
   }
 };
 
@@ -33,8 +37,8 @@ exports.login = async (req, res) => {
     });
 
     if (!user)
-      return res.status(404).json({
-        message: "User is not found. Please check username or email.",
+      return res.status(404).send({
+        message: "User is not found.",
       });
 
     const checkedPassword = await bcrypt.compare(password, user.hash);
@@ -55,7 +59,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Password is incorrect." });
     }
   } catch (err) {
-    return res.status(404).send(err.message);
+    return res.status(400).send(err.message);
   }
 };
 
@@ -76,6 +80,7 @@ exports.profile = async (req, res) => {
     const user = await UsersModel.findById(req.user._id).select(
       "name username email sex account"
     );
+
     if (!user) return res.status(404).send("User is not found.");
 
     return res.status(200).json(user);
@@ -89,24 +94,21 @@ exports.updateUsername = async (req, res) => {
   try {
     const { username, newUsername } = req.body;
 
-    const changeContent = {
+    const content = {
       username: newUsername,
     };
 
-    const userProfile = await UsersModel.findOneAndUpdate(
+    const user = await UsersModel.findOneAndUpdate(
       { username },
-      changeContent,
-      { new: true }
+      content,
+      newTrue
     );
+    if (!user) return res.status(404).send("User is not found.");
+    user.username = newUsername;
 
-    if (!userProfile) {
-      return res.status(404).send("User is not found.");
-    }
-    userProfile.username = newUsername;
-
-    return res.status(200).send("Username is updated.");
+    return res.status(200).json({ message: "Username is updated." });
   } catch (err) {
-    return res.status(404).send(err.message);
+    return res.status(400).send(err.message);
   }
 };
 
@@ -115,23 +117,42 @@ exports.updateEmail = async (req, res) => {
   try {
     const { email, newEmail } = req.body;
 
-    const changeContent = {
+    const content = {
       email: newEmail,
     };
 
-    const userProfile = await UsersModel.findOneAndUpdate(
-      { email },
-      changeContent,
-      { new: true }
-    );
+    const user = await UsersModel.findOneAndUpdate({ email }, content, newTrue);
+    if (!user) return res.status(404).send("User is not found.");
+    user.email = newEmail;
 
-    if (!userProfile) {
-      return res.status(404).send("User is not found.");
-    }
-    userProfile.email = newEmail;
-
-    return res.status(200).send("Email is updated.");
+    return res.status(200).json({ message: "Email is updated." });
   } catch (err) {
-    return res.status(404).send(err.message);
+    return res.status(400).send(err.message);
+  }
+};
+
+//! delete Account ------------------
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { usernameOrEmail, password } = req.body;
+
+    const user = await UsersModel.findOne({
+      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+    });
+
+    if (!user)
+      return res.status(404).send({
+        message: "User is not found.",
+      });
+
+    const checkedPassword = await bcrypt.compare(password, user.hash);
+
+    if (checkedPassword) {
+      await UsersModel.findByIdAndDelete(user._id);
+
+      return res.status(200).json({ message: "Account is deleted." });
+    }
+  } catch (err) {
+    return res.status(400).send(err.message);
   }
 };

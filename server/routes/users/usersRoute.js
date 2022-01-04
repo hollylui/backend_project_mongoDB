@@ -18,8 +18,13 @@ router.use(passport.authenticate("jwt", { session: false }));
 //Profile
 router.get("/profile", controller.profile);
 
-//update username profile
+//update username
 router.patch("/profile/username", controller.updateUsername);
+
+//update email
 router.patch("/profile/email", controller.updateEmail);
+
+//delete account
+router.post("/profile/delete", controller.deleteAccount);
 
 module.exports = router;
